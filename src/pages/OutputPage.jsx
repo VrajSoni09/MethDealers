@@ -105,7 +105,7 @@ const OutputPage = () => {
           {[
             { label: "Key Tokens Detected", value: `"delayed", "stranded", "no announcement"` },
             { label: "Sentiment Score", value: "−0.72 (Strongly Negative)" },
-            { label: "Pattern Match", value: `${(similar.length || 0) + 8} similar complaints in ${complaint.cluster || 'N/A'}` },
+            { label: "Pattern Match", value: `${complaint.cluster ? 8 : 0} similar complaints in ${complaint.cluster || 'N/A'}` },
           ].map((item) => (
             <div key={item.label} className={`border p-3 ${isDark ? 'border-gray-600 bg-gray-800/30' : 'border-gray-200 bg-gray-50'}`}>
               <div className={`uppercase tracking-wider mb-1 text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{item.label}</div>

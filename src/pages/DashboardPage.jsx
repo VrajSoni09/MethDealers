@@ -7,6 +7,7 @@ import {
 import StatCard from "../components/StatCard";
 import ChartTooltip from "../components/ChartTooltip";
 import { PIE_DATA, LINE_DATA, BAR_DATA, SCATTER_DATA } from "../data/chartData";
+import ComplaintCard from "../components/ComplaintCard";
 import { formatDate } from "../utils/helpers";
 
 const DashboardPage = ({ onToast }) => {
@@ -46,110 +47,73 @@ const DashboardPage = ({ onToast }) => {
         <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
           Welcome to the Rail Complaint Management System
         </p>
-        <div>
-          <h1 className={`text-2xl font-black font-serif ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Dashboard</h1>
-          <p className={`font-mono text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            AI Complaint Intelligence · System Overview · Live
-          </p>
-        </div>
-        <div className={`flex items-center gap-2 border px-3 py-2 ${isDark ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-gray-50'}`}>
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse-slow" />
-          <span className={`font-mono text-[10px] uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>System Online</span>
-        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
-          label="Total Complaints"
-          value={stats.totalComplaints}
-          isNum={true}
-          colorVariant="blue"
+          title="Total Complaints"
+          value={stats.total}
           icon="📊"
+          color="blue"
+          isDark={isDark}
         />
         <StatCard
-          label="Resolved Today"
-          value={stats.resolvedToday}
-          isNum={true}
-          colorVariant="green"
-          icon="✅"
-        />
-        <StatCard
-          label="Pending Review"
-          value={stats.pendingReview}
-          isNum={true}
-          colorVariant="orange"
+          title="Pending"
+          value={stats.pending}
           icon="⏳"
+          color="yellow"
+          isDark={isDark}
         />
         <StatCard
-          label="Critical Issues"
-          value={stats.criticalIssues}
-          isNum={true}
-          colorVariant="pink"
+          title="Resolved"
+          value={stats.resolved}
+          icon="✅"
+          color="green"
+          isDark={isDark}
+        />
+        <StatCard
+          title="High Priority"
+          value={stats.highPriority}
           icon="🚨"
+          color="red"
+          isDark={isDark}
         />
       </div>
 
-      {/* Recent Complaints Section */}
-      <SectionCard title="Recent Complaints">
-        <div className="space-y-3">
-          {recentComplaints.length === 0 ? (
-            <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              <div className="text-4xl mb-2">📋</div>
-              <p className="font-mono text-sm">No complaints submitted yet</p>
-              <p className="font-mono text-xs mt-1">Submit your first complaint to see it here</p>
-            </div>
-          ) : (
-            recentComplaints.map((complaint) => (
-              <div
-                key={complaint.id}
-                className={`p-4 rounded-lg border transition-all hover:shadow-md ${
+      {/* Recent Complaints */}
+      <div>
+        <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          Recent Complaints
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {complaints.slice(0, 6).map((complaint) => (
+            <div key={complaint.id}>
+              <ComplaintCard
+                complaint={complaint}
+                onClick={() => onToast(`Viewing complaint #${complaint.id}`, 'info')}
+                isDark={isDark}
+              />
+              <p className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+                {complaint.text.substring(0, 100)}...
+              </p>
+              <div className={`text-xs font-mono ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                {complaint.location} • {formatDate(complaint.timestamp)}
+              </div>
+              <button
+                onClick={() => navigate(`/app/output/${complaint.id}`)}
+                className={`px-3 py-1 text-xs rounded transition-colors ${
                   isDark
-                    ? 'bg-gray-800 border-gray-700 hover:bg-gray-750'
-                    : 'bg-white border-gray-200 hover:bg-gray-50'
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
                 }`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        complaint.severity === 'High'
-                          ? 'bg-red-100 text-red-700'
-                          : complaint.severity === 'Medium'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-green-100 text-green-700'
-                      }`}>
-                        {complaint.severity}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded font-medium ${
-                        isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
-                      }`}>
-                        {complaint.category}
-                      </span>
-                    </div>
-                    <p className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
-                      {complaint.text.substring(0, 100)}...
-                    </p>
-                    <div className={`text-xs font-mono ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {complaint.location} • {formatDate(complaint.timestamp)}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => navigate(`/app/output/${complaint.id}`)}
-                    className={`px-3 py-1 text-xs rounded transition-colors ${
-                      isDark
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'bg-blue-500 text-white hover:bg-blue-600'
-                    }`}
-                  >
-                    View Details
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+                View Details
+              </button>
+            </div>
+          ))}
         </div>
-      </SectionCard>
+      </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

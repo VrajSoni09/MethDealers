@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-import { CATEGORIES, SEVERITIES } from "../data/complaints";
+import { CATEGORIES } from "../data/complaints";
 import { generateId } from "../utils/helpers";
 import { useNavigate } from "react-router-dom";
 import LocationMap from "../components/LocationMap";
