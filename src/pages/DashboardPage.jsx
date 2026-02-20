@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import {
   PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -10,57 +9,43 @@ import ChartTooltip from "../components/ChartTooltip";
 import { PIE_DATA, LINE_DATA, BAR_DATA, SCATTER_DATA } from "../data/chartData";
 import { formatDate } from "../utils/helpers";
 
-const SectionCard = ({ title, children }) => {
+const DashboardPage = ({ onToast }) => {
   const { isDark } = useTheme();
-  return (
-    <div className={`rounded-lg p-6 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'} shadow-lg`}>
-      <div className={`text-lg font-semibold mb-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{title}</div>
-      {children}
-    </div>
-  );
-};
-
-const DashboardPage = ({ apiService }) => {
-  const { isDark } = useTheme();
-  const navigate = useNavigate();
-  
-  // Initialize with zero data
+  const [complaints, setComplaints] = useState([]);
   const [stats, setStats] = useState({
-    totalComplaints: 0,
-    resolvedToday: 0,
-    pendingReview: 0,
-    avgResolutionTime: 0,
-    criticalIssues: 0
+    total: 0,
+    pending: 0,
+    resolved: 0,
+    highPriority: 0,
   });
 
-  const [recentComplaints, setRecentComplaints] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch data from API
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [complaintsData, statsData] = await Promise.all([
-          apiService.getComplaints(),
-          apiService.getStats()
-        ]);
-        
-        setRecentComplaints(complaintsData.slice(0, 5)); // Show latest 5
-        setStats(statsData);
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Load complaints from localStorage
+    const storedComplaints = Object.keys(localStorage)
+      .filter(key => key.startsWith('complaint_'))
+      .map(key => JSON.parse(localStorage.getItem(key)))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    fetchData();
-  }, [apiService]);
+    setComplaints(storedComplaints);
+
+    // Calculate stats
+    const total = storedComplaints.length;
+    const pending = storedComplaints.filter(c => c.status === 'pending').length;
+    const resolved = storedComplaints.filter(c => c.status === 'resolved').length;
+    const highPriority = storedComplaints.filter(c => c.severity === 'HIGH').length;
+
+    setStats({ total, pending, resolved, highPriority });
+  }, []);
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-start justify-between">
+      <div className="mb-8">
+        <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          Dashboard
+        </h1>
+        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          Welcome to the Rail Complaint Management System
+        </p>
         <div>
           <h1 className={`text-2xl font-black font-serif ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Dashboard</h1>
           <p className={`font-mono text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>

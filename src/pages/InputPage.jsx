@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-import { CATEGORIES } from "../data/complaints";
+import { CATEGORIES, SEVERITIES } from "../data/complaints";
 import { generateId } from "../utils/helpers";
 import { useNavigate } from "react-router-dom";
 import LocationMap from "../components/LocationMap";
 
 const MAX_CHARS = 500;
 
-const InputPage = ({ onToast, apiService }) => {
+const InputPage = ({ onToast }) => {
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const [form, setForm] = useState({

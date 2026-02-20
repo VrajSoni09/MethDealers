@@ -2,9 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import { CATEGORIES, SEVERITIES } from "../data/complaints";
 import { useTheme } from "../contexts/ThemeContext";
 import { formatDate } from "../utils/helpers";
-import { useNavigate } from 'react-router-dom';
 
-const ComplaintsPage = ({ onView, apiService }) => {
+const ComplaintsPage = ({ onView }) => {
   const { isDark } = useTheme();
   
   const [complaints, setComplaints] = useState([]);
@@ -14,23 +13,16 @@ const ComplaintsPage = ({ onView, apiService }) => {
     date: "",
     search: ""
   });
-  const [loading, setLoading] = useState(true);
 
-  // Fetch complaints from API
   useEffect(() => {
-    const fetchComplaints = async () => {
-      try {
-        const data = await apiService.getComplaints();
-        setComplaints(data);
-      } catch (error) {
-        console.error('Failed to fetch complaints:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Load complaints from localStorage
+    const storedComplaints = Object.keys(localStorage)
+      .filter(key => key.startsWith('complaint_'))
+      .map(key => JSON.parse(localStorage.getItem(key)))
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    fetchComplaints();
-  }, [apiService]);
+    setComplaints(storedComplaints);
+  }, []);
 
   // Filter complaints
   const filteredComplaints = useMemo(() => {

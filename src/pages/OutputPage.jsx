@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -9,168 +9,84 @@ import { COMPLAINTS } from "../data/complaints";
 import { getSeverityClasses, formatDate } from "../utils/helpers";
 import ChartTooltip from "../components/ChartTooltip";
 
-const OutputPage = ({ apiService }) => {
-  const { isDark } = useTheme();
+const OutputPage = () => {
   const { complaintId } = useParams();
+  const { isDark } = useTheme();
+  const navigate = useNavigate();
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get complaint data from API
-    const fetchComplaint = async () => {
-      try {
-        const response = await apiService.getComplaint(complaintId);
-        console.log('Loaded complaint from database:', response);
-        setComplaint(response);
-      } catch (error) {
-        console.error('Failed to fetch complaint from database:', error);
-        
-        // Fallback to localStorage if API fails
-        const storedData = localStorage.getItem(`complaint_${complaintId}`);
-        if (storedData) {
-          const data = JSON.parse(storedData);
-          console.log('Fallback to localStorage:', data);
-          setComplaint(data);
-        } else {
-          // Mock data for demo
-          const mockData = {
-            id: complaintId,
-            text: "The train was delayed by 3 hours without any announcement. The AC was not working and there was no water in the toilets. Passengers were left stranded in the hot weather.",
-            category: "Service Delay",
-            final_category: "Service Delay",
-            severity: "Medium",
-            priority_flag: "MEDIUM",
-            confidence: 0.85,
-            confidence_category: 0.85,
-            confidence_severity: 0.75,
-            location: "New Delhi Railway Station",
-            coordinates: { lat: 28.6139, lng: 77.2090 },
-            zone: "Northern",
-            trainNo: "12345",
-            timestamp: new Date().toISOString(),
-            aiAnalysis: {
-              predicted_category: "Service Delay",
-              final_category: "Service Delay",
-              predicted_severity: "Medium",
-              severity: "Medium",
-              priority_flag: "MEDIUM",
-              confidence: 0.85,
-              confidence_category: 0.85,
-              confidence_severity: 0.75,
-              key_issues: ["delay", "ac not working", "no water"],
-              sentiment: "negative",
-              urgency_score: 0.7
-            }
-          };
-          console.log('Setting mock data:', mockData);
-          setComplaint(mockData);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchComplaint();
-  }, [complaintId, apiService]);
+    // Load complaint from localStorage
+    const stored = localStorage.getItem(`complaint_${complaintId}`);
+    if (stored) {
+      setComplaint(JSON.parse(stored));
+    } else {
+      navigate("/complaints");
+    }
+    setLoading(false);
+  }, [complaintId, navigate]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className={`text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          <div className="inline-block w-6 h-6 border-2 border-t-transparent rounded-full animate-spin mb-4" />
-          <p>Loading complaint analysis...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (!complaint) {
     return (
-      <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-        <p>Complaint not found</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className={`text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <h2 className="text-2xl font-bold mb-4">Complaint Not Found</h2>
+          <p className="mb-4">The complaint you're looking for doesn't exist.</p>
+          <button
+            onClick={() => navigate("/complaints")}
+            className={`px-6 py-2 rounded-lg font-medium ${
+              isDark 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            Back to Complaints
+          </button>
+        </div>
       </div>
     );
   }
 
-  // Confidence breakdown
-  const confData = [
-    { name: complaint.final_category || complaint.category, value: Math.round((complaint.confidence_category || complaint.confidence) * 100) },
-    { name: "Other", value: Math.round((1 - (complaint.confidence_category || complaint.confidence)) * 100) },
-  ];
-
-  // Category comparison mock
-  const catComparison = [
-    { name: complaint.final_category || complaint.category, value: Math.round((complaint.confidence_category || complaint.confidence) * 100) },
-    { name: "Alt 1", value: Math.round((1 - (complaint.confidence_category || complaint.confidence)) * 60) },
-    { name: "Alt 2", value: Math.round((1 - (complaint.confidence_category || complaint.confidence)) * 35) },
-    { name: "Alt 3", value: Math.round((1 - (complaint.confidence_category || complaint.confidence)) * 15) },
-  ];
-
-  // Similar complaints in same cluster
-  const similar = COMPLAINTS.filter(
-    (x) => x.cluster === complaint.cluster && x.id !== complaint.id
-  ).slice(0, 3);
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case "HIGH": return "text-red-600";
+      case "MEDIUM": return "text-yellow-600";
+      case "LOW": return "text-green-600";
+      default: return "text-gray-600";
+    }
+  };
 
   return (
-    <div className="space-y-6 w-full">
-      {/* Header */}
-      <div>
-        <h1 className={`text-2xl font-black font-serif ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Analysis Output</h1>
-        <p className={`font-mono text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          AI prediction results for complaint {complaint.id}
-        </p>
-      </div>
+   <>
+     <div className={`min-h-screen ${isDark ? 'bg-gray-950' : 'bg-gray-50'} py-8`}>
+      <div className="max-w-4xl mx-auto px-4">
+        <button
+          onClick={() => navigate("/complaints")}
+          className={`mb-6 flex items-center gap-2 text-sm font-medium ${
+            isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          ← Back to Complaints
+        </button>
 
-      {/* Main complaint view */}
-      <div className={`border p-6 ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
-        {/* Meta row */}
-        <div className="flex items-center gap-3 flex-wrap mb-4">
-          <span className={`font-mono text-[10px] px-2 py-0.5 border ${isDark ? 'text-gray-400 bg-gray-700 border-gray-600' : 'text-gray-600 bg-gray-100 border-gray-300'}`}>
-            {complaint.id}
-          </span>
-          <span className={`font-mono text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{formatDate(complaint.timestamp)}</span>
-          {complaint.trainNo && complaint.trainNo !== "N/A" && (
-            <span className={`font-mono text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Train #{complaint.trainNo}</span>
-          )}
-          {complaint.zone && complaint.zone !== "N/A" && (
-            <span className={`font-mono text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{complaint.zone} Zone</span>
-          )}
-        </div>
-
-        {/* Full complaint text */}
-        <p className={`text-sm leading-relaxed font-sans mb-6 border-l-2 pl-4 ${isDark ? 'text-gray-300 border-gray-600' : 'text-gray-700 border-gray-300'}`}>
-          {complaint.text}
-        </p>
-
-        {/* Result grid */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <div className={`border p-4 ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
-            <div className={`font-mono text-[10px] uppercase tracking-wider mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Predicted Category</div>
-            <div className={`font-bold text-sm font-serif ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{complaint.final_category || complaint.category}</div>
-          </div>
-          <div className={`border p-4 ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
-            <div className={`font-mono text-[10px] uppercase tracking-wider mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Severity</div>
-            <div className={`inline-block text-xs px-2 py-1 font-mono font-bold ${getSeverityClasses(complaint.severity)}`}>
-              {complaint.severity}
+        <div className={`rounded-lg p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-lg`}>
+          <div className="mb-6">
+            <h1 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Complaint Details
+            </h1>
+            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              ID: {complaint.id}
             </div>
           </div>
-          <div className={`border p-4 ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
-            <div className={`font-mono text-[10px] uppercase tracking-wider mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Priority</div>
-            <div className={`inline-block text-xs px-2 py-1 font-mono font-bold ${
-              complaint.priority_flag === 'HIGH' ? 'bg-red-100 text-red-700' :
-              complaint.priority_flag === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-              'bg-green-100 text-green-700'
-            }`}>
-              {complaint.priority_flag}
-            </div>
-          </div>
-          <div className={`border p-4 ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
-            <div className={`font-mono text-[10px] uppercase tracking-wider mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Category Confidence</div>
-            <div className={`font-black font-mono text-lg ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
-              {complaint.confidence_category ? (complaint.confidence_category * 100).toFixed(1) : (complaint.confidence * 100).toFixed(1)}%
-            </div>
-          </div>
-          <div className={`border p-4 ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
             <div className={`font-mono text-[10px] uppercase tracking-wider mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Severity Confidence</div>
             <div className={`font-black font-mono text-lg ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
               {complaint.confidence_severity ? (complaint.confidence_severity * 100).toFixed(1) : 'N/A'}%
@@ -182,8 +98,7 @@ const OutputPage = ({ apiService }) => {
           </div>
         </div>
       </div>
-
-      {/* AI Reasoning */}
+      
       <div className={`border p-5 ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'}`}>
         <div className={`text-lg font-semibold mb-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>AI Reasoning Summary</div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
@@ -280,7 +195,7 @@ const OutputPage = ({ apiService }) => {
           </button>
         </div>
       </div>
-    </div>
+   </>
   );
 };
 
