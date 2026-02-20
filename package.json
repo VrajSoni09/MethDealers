@@ -1,0 +1,45 @@
+{
+  "name": "rail-complaint-system",
+  "version": "1.0.0",
+  "description": "AI-Powered Intelligent Complaint Categorization & Pattern Detection System for Indian Railways",
+  "private": true,
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-validator": "^7.3.1",
+    "gsap": "^3.12.4",
+    "jsonwebtoken": "^9.0.3",
+    "leaflet": "^1.9.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.13.0",
+    "react-scripts": "5.0.1",
+    "recharts": "^2.10.3",
+    "sqlite3": "^5.1.7"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version"
+    ]
+  }
+}
